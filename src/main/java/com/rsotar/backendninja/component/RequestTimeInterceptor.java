@@ -1,17 +1,31 @@
 package com.rsotar.backendninja.component;
 
+import com.rsotar.backendninja.entity.Log;
+import com.rsotar.backendninja.repository.LogRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.Date;
 
 @Component("requestTimeInterceptor")
 public class RequestTimeInterceptor extends HandlerInterceptorAdapter {
 
-  private static final Logger log = LoggerFactory.getLogger(RequestTimeInterceptor.class);
+  private static final Logger logger = LoggerFactory.getLogger(RequestTimeInterceptor.class);
+
+  private LogRepository logRepository;
+
+  @Autowired
+  public RequestTimeInterceptor(@Qualifier("logRepository") LogRepository logRepository) {
+	this.logRepository = logRepository;
+  }
 
   @Override
   public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -26,6 +40,14 @@ public class RequestTimeInterceptor extends HandlerInterceptorAdapter {
 
     long startTime = (long) request.getAttribute("startTime");
     String requestUrl = request.getRequestURL().toString();
-    log.info("URL To: " + requestUrl + " in: " + (System.currentTimeMillis() - startTime) + " ms ");
+
+	Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+	String username = "";
+	if (auth != null && auth.isAuthenticated()) {
+
+	}
+	Log log =  new Log(new Date(), auth.getDetails().toString(), username, requestUrl);
+	logRepository.save(log);
+	logger.info("URL To: " + requestUrl + " in: " + (System.currentTimeMillis() - startTime) + " ms ");
   }
 }

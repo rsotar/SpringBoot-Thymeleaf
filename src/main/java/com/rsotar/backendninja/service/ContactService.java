@@ -15,4 +15,6 @@ public interface ContactService {
 
   void removeContact(int id);
 
+  ContactModel findContactByIdModel(int id);
+
 }

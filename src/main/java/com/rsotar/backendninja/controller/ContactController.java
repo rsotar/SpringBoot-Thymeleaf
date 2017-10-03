@@ -1,12 +1,15 @@
 package com.rsotar.backendninja.controller;
 
 import com.rsotar.backendninja.constant.ViewConstant;
+import com.rsotar.backendninja.entity.Contact;
 import com.rsotar.backendninja.model.ContactModel;
 import com.rsotar.backendninja.service.ContactService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,14 +39,22 @@ public class ContactController {
   }
 
   @GetMapping("/contactform")
-  private String redirectContactForm(Model model) {
-    model.addAttribute("contactModel", new ContactModel());
+  private String redirectContactForm(@RequestParam(name="id", required=false) int id, Model model) {
+    ContactModel contactModel = new ContactModel();
+
+    if(id != 0) {
+		contactModel = contactService.findContactByIdModel(id);
+	}
+    model.addAttribute("contactModel", contactModel);
     return ViewConstant.CONTACT_FORM;
   }
 
   @GetMapping("/showcontacts")
   public ModelAndView showContacts() {
     ModelAndView mav = new ModelAndView(ViewConstant.CONTACTS);
+
+	User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+	mav.addObject("username", user.getUsername());
     mav.addObject("contacts", contactService.listAllContacts());
 
     return mav;
